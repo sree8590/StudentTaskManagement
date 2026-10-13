@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Task Management</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 20px;
+        }
+
+        input, button {
+            margin: 5px;
+            padding: 5px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+        }
+
+        .fail {
+            background-color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Student Task Management</h1>
+
+    <form id="studentForm">
+        <input type="text" id="name" placeholder="Student Name" required>
+        <input type="text" id="subject" placeholder="Subject" required>
+        <input type="number" id="marks" placeholder="Marks" min="0" max="100" required>
+        <button type="submit">Add</button>
+    </form>
+
+    <p id="message"></p>
+
+    <button type="button" id="averageBtn">Calculate Average</button>
+    <button type="button" id="removeBtn">Remove Student</button>
+
+    <p id="average"></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Subject</th>
+                <th>Marks</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="studentTable"></tbody>
+    </table>
+
+    <script>
+        let students = JSON.parse(localStorage.getItem("students")) || [];
+
+        const form = document.getElementById("studentForm");
+
+        function displayStudents() {
+            let table = document.getElementById("studentTable");
+            table.innerHTML = "";
+
+            students.forEach(function(student) {
+                let row = document.createElement("tr");
+
+                let status = student.marks >= 50 ? "Pass" : "Fail";
+
+                if (student.marks < 50) {
+                    row.classList.add("fail");
+                }
+
+                row.innerHTML = `
+                    <td>${student.name}</td>
+                    <td>${student.subject}</td>
+                    <td>${student.marks}</td>
+                    <td>${status}</td>
+                `;
+
+                table.appendChild(row);
+            });
+        }
+
+
+        form.addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            let name = document.getElementById("name").value.trim();
+            let subject = document.getElementById("subject").value.trim();
+            let marksValue = document.getElementById("marks").value;
+
+            if (name === "" || subject === "" || marksValue === "") {
+                alert("Please fill all fields");
+                return;
+            }
+
+            let marks = Number(marksValue);
+
+            if (marks < 0 || marks > 100) {
+                alert("Enter marks between 0 and 100");
+                return;
+            }
+
+            let student = {
+                name: name,
+                subject: subject,
+                marks: marks
+            };
+
+            students.push(student);
+
+            localStorage.setItem("students", JSON.stringify(students));
+
+            displayStudents();
+            form.reset();
+
+            document.getElementById("message").textContent =
+                "Student added successfully!";
+
+            setTimeout(() => {
+                document.getElementById("message").textContent = "";
+            }, 2000);
+        });
+
+
+        document.getElementById("averageBtn").addEventListener("click", function() {
+            if (students.length === 0) {
+                document.getElementById("average").textContent =
+                    "No student records";
+                return;
+            }
+
+            let total = students.reduce(
+                (sum, student) => sum + student.marks, 0
+            );
+
+            document.getElementById("average").textContent =
+                "Average Marks: " + (total / students.length).toFixed(2);
+        });
+
+        
+        document.getElementById("removeBtn").addEventListener("click", function() {
+            let name = prompt("Enter student name to remove");
+
+            if (name === null || name.trim() === "") {
+                return;
+            }
+
+            let index = students.findIndex(
+                student => student.name.toLowerCase() === name.trim().toLowerCase()
+            );
+
+            if (index !== -1) {
+                students.splice(index, 1);
+
+                localStorage.setItem("students", JSON.stringify(students));
+
+                displayStudents();
+
+                document.getElementById("message").textContent =
+                    "Student removed successfully!";
+            } else {
+                document.getElementById("message").textContent =
+                    "Student not found!";
+            }
+        });
+
+        displayStudents();
+    </script>
+
+</body>
+</html>
